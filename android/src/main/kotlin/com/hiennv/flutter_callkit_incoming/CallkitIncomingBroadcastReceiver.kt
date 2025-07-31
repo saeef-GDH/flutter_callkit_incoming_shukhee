@@ -267,6 +267,9 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
         val apiUrl = "https://dev-api.shukhee.com/v1/api/user/appointment/$appointmentId/call-log"
 
+        Log.d(TAG, "Appointment ID - $appointmentId")
+        Log.d(TAG, "Callkit Action - $action")
+
         val jsonBody = when (action) {
             CallkitConstants.ACTION_CALL_DECLINE -> """
             {
@@ -311,7 +314,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 reader.close()
 
                 // ✅ Optional: Log the response
-                println("Response: $responseCode $responseMessage\n$response")
+                println("$TAG Response: $responseCode $responseMessage\n$response")
 
             } catch (e: Exception) {
                 e.printStackTrace()
