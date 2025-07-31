@@ -7,6 +7,11 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import java.io.BufferedOutputStream
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 
 class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
@@ -133,6 +138,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 try {
                     // clear notification
                     callkitNotificationManager?.clearIncomingNotification(data, false)
+                    sendCallLog(CallkitConstants.ACTION_CALL_DECLINE, data)
                     sendEventFlutter(CallkitConstants.ACTION_CALL_DECLINE, data)
                     removeCall(context, Data.fromBundle(data))
                 } catch (error: Exception) {
@@ -156,6 +162,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 try {
                     // clear notification and show miss notification
                     callkitNotificationManager?.clearIncomingNotification(data, false)
+                    sendCallLog(CallkitConstants.ACTION_CALL_TIMEOUT, data)
                     callkitNotificationManager?.showMissCallNotification(data)
                     sendEventFlutter(CallkitConstants.ACTION_CALL_TIMEOUT, data)
                     removeCall(context, Data.fromBundle(data))
@@ -250,5 +257,65 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
             "android" to android
         )
         FlutterCallkitIncomingPlugin.sendEvent(event, forwardData)
+    }
+
+    private fun sendCallLog(action: String, data: Bundle?) {
+
+        val extra = data?.getBundle("extra") ?: return
+
+        val appointmentId = extra.getString("appointmentId") ?: ""
+
+        val apiUrl = "https://dev-api.shukhee.com/v1/api/user/appointment/$appointmentId/call-log"
+
+        val jsonBody = when (action) {
+            CallkitConstants.ACTION_CALL_DECLINE -> """
+            {
+              "call_duration": 0,
+              "channelName": "agora",
+              "callType": "video",
+              "status": "rejected"
+            }
+        """
+
+            CallkitConstants.ACTION_CALL_TIMEOUT -> """
+            {
+              "call_duration": 0,
+              "channelName": "agora",
+              "callType": "video",
+              "status": "missed"
+            }
+        """
+
+            else -> null
+        }
+
+        Thread {
+            try {
+                val url = URL(apiUrl)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.doInput = true
+                connection.doOutput = true
+
+                val outputStream = BufferedOutputStream(connection.outputStream)
+                outputStream.write(jsonBody?.toByteArray())
+                outputStream.flush()
+                outputStream.close()
+
+                val responseCode = connection.responseCode
+                val responseMessage = connection.responseMessage
+
+                val reader = BufferedReader(InputStreamReader(connection.inputStream))
+                val response = reader.readText()
+                reader.close()
+
+                // ✅ Optional: Log the response
+                println("Response: $responseCode $responseMessage\n$response")
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
     }
 }
