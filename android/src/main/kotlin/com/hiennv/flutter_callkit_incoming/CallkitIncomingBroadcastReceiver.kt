@@ -93,6 +93,9 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
         val data = intent.extras?.getBundle(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA) ?: return
+
+        Log.d(TAG, "Callkit On Receive called ---- $action")
+
         when (action) {
             "${context.packageName}.${CallkitConstants.ACTION_CALL_INCOMING}" -> {
                 try {
@@ -261,9 +264,10 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
 
     private fun sendCallLog(action: String, data: Bundle?) {
 
-        val extra = data?.getBundle("extra") ?: return
+        Log.d(TAG, "Send call log called")
 
-        val appointmentId = extra.getString("appointmentId") ?: ""
+        val extra = data?.getSerializable(CallkitConstants.EXTRA_CALLKIT_EXTRA) as? HashMap<*, *>
+        val appointmentId = extra?.get("appointmentId")?.toString() ?: ""
 
         val apiUrl = "https://dev-api.shukhee.com/v1/api/user/appointment/$appointmentId/call-log"
 
