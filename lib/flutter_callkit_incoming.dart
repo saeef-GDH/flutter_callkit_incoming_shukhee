@@ -33,6 +33,7 @@ class FlutterCallkitIncoming {
   /// Event.ACTION_CALL_TOGGLE_GROUP - only iOS
   /// Event.ACTION_CALL_TOGGLE_AUDIO_SESSION - only iOS
   /// Event.DID_UPDATE_DEVICE_PUSH_TOKEN_VOIP - only iOS
+  /// Event.ACTION_CALL_CANCELED - Cancel call if the dialer cancels the call
   /// }
   static Stream<CallEvent?> get onEvent =>
       _eventChannel.receiveBroadcastStream().map(_receiveCallEvent);
@@ -143,6 +144,11 @@ class FlutterCallkitIncoming {
   /// Only Android: canUseFullScreenIntent permission for ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT
   static Future canUseFullScreenIntent() async {
     return await _channel.invokeMethod("canUseFullScreenIntent");
+  }
+
+  /// Cancel call if the dialer cancels the call.
+  static Future cancelCall() async {
+    await _channel.invokeMethod("cancelCall");
   }
 
   static CallEvent? _receiveCallEvent(dynamic data) {

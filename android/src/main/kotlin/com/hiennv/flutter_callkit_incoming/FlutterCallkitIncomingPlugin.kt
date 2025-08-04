@@ -342,6 +342,17 @@ class FlutterCallkitIncomingPlugin : FlutterPlugin, MethodCallHandler, ActivityA
                 "setAudioRoute" -> {
                     result.success(true)
                 }
+
+                "cancelCall" -> {
+                    context?.sendBroadcast(
+                        CallkitIncomingBroadcastReceiver.getIntentCanceled(
+                            requireNotNull(context),
+                            it.toBundle()
+                        )
+                    )
+                    removeAllCalls(context)
+                    result.success(true)
+                }
             }
         } catch (error: Exception) {
             result.error("error", error.message, "")

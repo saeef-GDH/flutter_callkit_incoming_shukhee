@@ -84,6 +84,12 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 action = "${context.packageName}.${CallkitConstants.ACTION_CALL_CONNECTED}"
                 putExtra(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA, data)
             }
+
+        fun getIntentCanceled(context: Context, data: Bundle?) =
+            Intent(context, CallkitIncomingBroadcastReceiver::class.java).apply {
+                action = "${context.packageName}.${CallkitConstants.ACTION_CALL_CANCELED}"
+                putExtra(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA, data)
+            }
     }
 
     private val callkitNotificationManager: CallkitNotificationManager? = FlutterCallkitIncomingPlugin.getInstance()?.getCallkitNotificationManager()
@@ -192,6 +198,18 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                         val closeNotificationPanel = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
                         context.sendBroadcast(closeNotificationPanel)
                     }
+                } catch (error: Exception) {
+                    Log.e(TAG, null, error)
+                }
+            }
+
+            "${context.packageName}.${CallkitConstants.ACTION_CALL_CANCELED}" -> {
+                try {
+                    // clear notification
+                    callkitNotificationManager?.clearIncomingNotification(data, false)
+                    callkitNotificationManager?.showMissCallNotification(data)
+                    sendEventFlutter(CallkitConstants.ACTION_CALL_CANCELED, data)
+                    removeCall(context, Data.fromBundle(data))
                 } catch (error: Exception) {
                     Log.e(TAG, null, error)
                 }
