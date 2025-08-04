@@ -347,13 +347,16 @@ class FlutterCallkitIncomingPlugin : FlutterPlugin, MethodCallHandler, ActivityA
                     val calls = getDataActiveCalls(context)
                     val data = Data(call.arguments() ?: HashMap())
                     val currentCall = calls.firstOrNull { it.id == data.id }
-                    context?.sendBroadcast(
-                        CallkitIncomingBroadcastReceiver.getIntentCanceled(
-                            requireNotNull(context),
-                            currentCall.toBundle()
+                    if (currentCall != null && context != null) {
+                        context?.sendBroadcast(
+                            CallkitIncomingBroadcastReceiver.getIntentCanceled(
+                                requireNotNull(context),
+                                currentCall.toBundle()
+                            )
                         )
-                    )
-                    removeAllCalls(context)
+
+                        removeAllCalls(context)
+                    }
                     result.success(true)
                 }
             }
